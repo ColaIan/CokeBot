@@ -4,7 +4,6 @@
     "": {
       "name": "cokebot-js",
       "dependencies": {
-        "bufferutil": "^4.0.9",
         "discord.js": "^14.25.1",
       },
       "devDependencies": {

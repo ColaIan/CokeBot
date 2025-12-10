@@ -31,12 +31,19 @@ client.on(Events.ClientReady, async (readyClient) => {
     console.log(
       `Started refreshing ${commands.size} application (/) commands.`
     );
-    // The put method is used to fully refresh all commands in the guild with the current set
-    const data = await rest.put(
+    // The put method is used to fully refresh all commands with the current set
+    const data = (await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID!),
-      { body: commands.values().map((x) => x.data.toJSON()) }
+      {
+        body: commands
+          .values()
+          .map((x) => x.data.toJSON())
+          .toArray(),
+      }
+    )) as any[];
+    console.log(
+      `Successfully refreshed ${data.length} application (/) commands.`
     );
-    console.log(`Successfully refreshed application (/) commands.`);
   } catch (error) {
     // And of course, make sure you catch and log any errors!
     console.error(error);

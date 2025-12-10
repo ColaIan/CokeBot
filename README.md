@@ -1,4 +1,4 @@
-# cokebot-js
+# cokebot
 
 To install dependencies:
 

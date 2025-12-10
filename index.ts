@@ -1,4 +1,9 @@
-import { GuildQueueEvent, Player, useMainPlayer } from "discord-player";
+import {
+  GuildQueueEvent,
+  Player,
+  QueueRepeatMode,
+  useMainPlayer,
+} from "discord-player";
 import { SoundcloudExtractor } from "discord-player-soundcloud";
 import { SpotifyExtractor } from "discord-player-spotify";
 import {
@@ -108,7 +113,7 @@ player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
   await queue.metadata.channel?.send(`Now playing **${track.cleanTitle}**!`);
 });
 player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
-  if (queue.isEmpty())
+  if (queue.repeatMode === QueueRepeatMode.OFF && queue.isEmpty())
     await queue.metadata.channel?.send(
       `Queue is empty, leaving the voice channel.`
     );

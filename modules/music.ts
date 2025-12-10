@@ -250,7 +250,7 @@ export default {
 
         // Send a confirmation message
         interaction.editReply(
-          `Loop mode set to ${(QueueRepeatMode as any)[loopMode]}`
+          `Loop mode set to ${Object.keys(QueueRepeatMode)[loopMode - 1]}`
         );
       },
     },

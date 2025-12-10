@@ -10,9 +10,7 @@ export interface BotModule {
   commands: {
     [command: string]: {
       data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
-      execute: (
-        interaction: ChatInputCommandInteraction
-      ) => Promise<InteractionResponse>;
+      execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
     };
   };
 }

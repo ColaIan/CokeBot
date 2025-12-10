@@ -32,18 +32,20 @@ export default {
         const voiceChannel = (interaction.member as GuildMember).voice.channel;
 
         if (!voiceChannel) {
-          return interaction.reply(
+          interaction.editReply(
             "You need to be in a voice channel to play music!"
           );
+          return;
         }
 
         if (
           interaction.guild!.members.me!.voice.channel &&
           interaction.guild!.members.me!.voice.channel !== voiceChannel
         ) {
-          return interaction.reply(
+          interaction.editReply(
             "I am already playing in a different voice channel!"
           );
+          return;
         }
 
         if (
@@ -51,9 +53,10 @@ export default {
             .permissionsFor(interaction.guild!.members.me!)
             .has(PermissionsBitField.Flags.Connect)
         ) {
-          return interaction.reply(
+          interaction.editReply(
             "I do not have permission to join your voice channel!"
           );
+          return;
         }
 
         if (
@@ -61,9 +64,10 @@ export default {
             .permissionsFor(interaction.guild!.members.me!)
             .has(PermissionsBitField.Flags.Speak)
         ) {
-          return interaction.reply(
+          interaction.editReply(
             "I do not have permission to speak in your voice channel!"
           );
+          return;
         }
 
         try {
@@ -75,13 +79,13 @@ export default {
           });
 
           // Reply to the user that the song has been added to the queue
-          return interaction.reply(
+          interaction.editReply(
             `${result.track.title} has been added to the queue!`
           );
         } catch (error) {
           // Handle any errors that occur
           console.error(error);
-          return interaction.reply("An error occurred while playing the song!");
+          interaction.editReply("An error occurred while playing the song!");
         }
       },
     },
@@ -94,9 +98,10 @@ export default {
         const queue = useQueue();
 
         if (!queue) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         // Get the currently playing song
@@ -104,11 +109,12 @@ export default {
 
         // Check if there is a song playing
         if (!currentSong) {
-          return interaction.reply("No song is currently playing.");
+          interaction.editReply("No song is currently playing.");
+          return;
         }
 
         // Send the currently playing song information
-        return interaction.reply(`Now playing: ${currentSong.title}`);
+        interaction.editReply(`Now playing: ${currentSong.title}`);
       },
     },
     pause: {
@@ -120,9 +126,10 @@ export default {
         const timeline = useTimeline();
 
         if (!timeline) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         // Invert the pause state
@@ -131,7 +138,7 @@ export default {
         wasPaused ? timeline.resume() : timeline.pause();
 
         // If the timeline was previously paused, the queue is now back to playing
-        return interaction.reply(
+        interaction.editReply(
           `The player is now ${wasPaused ? "playing" : "paused"}.`
         );
       },
@@ -145,20 +152,22 @@ export default {
         const queue = useQueue();
 
         if (!queue) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         if (!queue.isPlaying()) {
-          return interaction.reply("There is no track playing.");
+          interaction.editReply("There is no track playing.");
+          return;
         }
 
         // Skip the current track
         queue.node.skip();
 
         // Send a confirmation message
-        return interaction.reply("The current song has been skipped.");
+        interaction.editReply("The current song has been skipped.");
       },
     },
     shuffle: {
@@ -170,22 +179,25 @@ export default {
         const queue = useQueue();
 
         if (!queue) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         // Check if there are enough tracks in the queue
-        if (queue.tracks.size < 2)
-          return interaction.reply(
+        if (queue.tracks.size < 2) {
+          interaction.editReply(
             "There are not enough tracks in the queue to shuffle."
           );
+          return;
+        }
 
         // Shuffle the tracks in the queue
         queue.tracks.shuffle();
 
         // Send a confirmation message
-        return interaction.reply(`Shuffled ${queue.tracks.size} tracks.`);
+        interaction.editReply(`Shuffled ${queue.tracks.size} tracks.`);
       },
     },
     loop: {
@@ -221,9 +233,10 @@ export default {
         const queue = useQueue();
 
         if (!queue) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         // Get the loop mode
@@ -236,7 +249,7 @@ export default {
         queue.setRepeatMode(loopMode);
 
         // Send a confirmation message
-        return interaction.reply(
+        interaction.editReply(
           `Loop mode set to ${(QueueRepeatMode as any)[loopMode]}`
         );
       },
@@ -250,16 +263,18 @@ export default {
         const queue = useQueue();
 
         if (!queue) {
-          return interaction.reply(
+          interaction.editReply(
             "This server does not have an active player session."
           );
+          return;
         }
 
         // Get the current track
         const currentTrack = queue.currentTrack;
 
         if (!currentTrack) {
-          return interaction.reply("No track is currently playing.");
+          interaction.editReply("No track is currently playing.");
+          return;
         }
 
         // Get the upcoming tracks
@@ -276,7 +291,7 @@ export default {
         ].join("\n");
 
         // Send the message
-        return interaction.reply(message);
+        interaction.editReply(message);
       },
     },
   },

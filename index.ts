@@ -1,5 +1,6 @@
-import { DefaultExtractors } from "@discord-player/extractor";
-import { GuildQueueEvent, Player } from "discord-player";
+import { GuildQueueEvent, Player, useMainPlayer } from "discord-player";
+import { SoundcloudExtractor } from "discord-player-soundcloud";
+import { SpotifyExtractor } from "discord-player-spotify";
 import {
   ChatInputCommandInteraction,
   Client,
@@ -14,60 +15,6 @@ import {
 import { readdirSync } from "fs";
 import path from "path";
 import type { BotModule } from "./types";
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates,
-  ],
-});
-
-const rest = new REST().setToken(process.env.TOKEN!);
-
-client.on(Events.ClientReady, async (readyClient) => {
-  console.log(`Logged in as ${readyClient.user.tag}!`);
-  try {
-    console.log(
-      `Started refreshing ${commands.size} application (/) commands.`
-    );
-    // The put method is used to fully refresh all commands with the current set
-    const data = (await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID!),
-      {
-        body: commands
-          .values()
-          .map((x) => x.data.toJSON())
-          .toArray(),
-      }
-    )) as any[];
-    console.log(
-      `Successfully refreshed ${data.length} application (/) commands.`
-    );
-  } catch (error) {
-    // And of course, make sure you catch and log any errors!
-    console.error(error);
-  }
-});
-
-client.on(Events.GuildMemberAdd, (member) => {
-  if (member.guild.id === "667714189254459414" && !member.user.bot) {
-    member.roles.add([
-      "810082644636860451",
-      "810082644623622212",
-      "810082644623622205",
-    ]);
-  }
-});
-
-const player = new Player(client);
-await player.extractors.loadMulti(DefaultExtractors);
-player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
-  await queue.metadata.channel.send(`Now playing **${track.cleanTitle}**!`);
-});
-player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
-  await queue.metadata.channel.send(`Finished playing ${track.title}`);
-});
 
 // Register modules
 const commands = new Collection<string, BotModule["commands"][string]>();
@@ -106,6 +53,67 @@ for (const file of modulePaths) {
   }
 }
 
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
+  ],
+});
+
+const rest = new REST().setToken(process.env.TOKEN!);
+
+client.on(Events.ClientReady, async (readyClient) => {
+  console.log(`Logged in as ${readyClient.user.tag}!`);
+  try {
+    console.log(
+      `Started refreshing ${commands.size} application (/) commands.`
+    );
+    // The put method is used to fully refresh all commands with the current set
+    const data = (await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID!),
+      {
+        body: commands
+          .values()
+          .map((x) => x.data.toJSON())
+          .toArray(),
+      }
+    )) as any[];
+    console.log(
+      `Successfully refreshed ${data.length} application (/) commands.`
+    );
+  } catch (error) {
+    // And of course, make sure you catch and log any errors!
+    console.error(error);
+  }
+});
+client.on(Events.Error, console.error);
+
+client.on(Events.GuildMemberAdd, (member) => {
+  if (member.guild.id === "667714189254459414" && !member.user.bot) {
+    member.roles.add([
+      "810082644636860451",
+      "810082644623622212",
+      "810082644623622205",
+    ]);
+  }
+});
+
+const player = new Player(client);
+await player.extractors.loadMulti([SoundcloudExtractor, SpotifyExtractor], {});
+player.events.on(GuildQueueEvent.PlayerError, async (queue, error) => {
+  await queue.metadata.channel?.send(`Error: ${error.message}`);
+});
+player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
+  await queue.metadata.channel?.send(`Now playing **${track.cleanTitle}**!`);
+});
+player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
+  if (queue.isEmpty())
+    await queue.metadata.channel?.send(
+      `Queue is empty, leaving the voice channel.`
+    );
+});
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (
     !((interaction: Interaction): interaction is ChatInputCommandInteraction =>
@@ -118,7 +126,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
   try {
-    await command.execute(interaction);
+    await interaction.deferReply();
+    if (interaction.guild)
+      await useMainPlayer().context.provide({ guild: interaction.guild }, () =>
+        command.execute(interaction)
+      );
+    else command.execute(interaction);
   } catch (error) {
     console.error(error);
     if (interaction.replied || interaction.deferred) {

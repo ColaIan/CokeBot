@@ -46,13 +46,13 @@ for (const file of modulePaths) {
           commands.set(command.data.name, command);
         } else {
           console.log(
-            `[WARNING] Command ${key} at ${modulePath} is missing a required "data" or "execute" property.`
+            `[WARNING] Command ${key} at ${modulePath} is missing a required "data" or "execute" property.`,
           );
         }
       }
     } else {
       console.log(
-        `[WARNING] The module at ${modulePath} is missing a required "commands" property.`
+        `[WARNING] The module at ${modulePath} is missing a required "commands" property.`,
       );
     }
   }
@@ -72,7 +72,7 @@ client.on(Events.ClientReady, async (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}!`);
   try {
     console.log(
-      `Started refreshing ${commands.size} application (/) commands.`
+      `Started refreshing ${commands.size} application (/) commands.`,
     );
     // The put method is used to fully refresh all commands with the current set
     const data = (await rest.put(
@@ -82,10 +82,10 @@ client.on(Events.ClientReady, async (readyClient) => {
           .values()
           .map((x) => x.data.toJSON())
           .toArray(),
-      }
+      },
     )) as any[];
     console.log(
-      `Successfully refreshed ${data.length} application (/) commands.`
+      `Successfully refreshed ${data.length} application (/) commands.`,
     );
   } catch (error) {
     // And of course, make sure you catch and log any errors!
@@ -94,9 +94,9 @@ client.on(Events.ClientReady, async (readyClient) => {
 });
 client.on(Events.Error, console.error);
 
-client.on(Events.GuildMemberAdd, (member) => {
-  if (member.guild.id === "667714189254459414" && !member.user.bot) {
-    member.roles.add([
+client.on(Events.GuildMemberAdd, async (member) => {
+  if (member.guild.id === "810082644623622204" && !member.user.bot) {
+    await member.roles.add([
       "810082644636860451",
       "810082644623622212",
       "810082644623622205",
@@ -115,7 +115,7 @@ player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
 player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
   if (queue.repeatMode === QueueRepeatMode.OFF && queue.isEmpty())
     await queue.metadata.channel?.send(
-      `Queue is empty, leaving the voice channel.`
+      `Queue is empty, leaving the voice channel.`,
     );
 });
 
@@ -134,7 +134,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await interaction.deferReply();
     if (interaction.guild)
       await useMainPlayer().context.provide({ guild: interaction.guild }, () =>
-        command.execute(interaction)
+        command.execute(interaction),
       );
     else command.execute(interaction);
   } catch (error) {
